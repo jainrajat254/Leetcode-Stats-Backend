@@ -2,7 +2,6 @@ package com.example.LeetCode.Controller;
 
 import com.example.LeetCode.Model.LoginCredentials;
 import com.example.LeetCode.Model.LoginResponse;
-import com.example.LeetCode.Model.UserData;
 import com.example.LeetCode.Model.Users;
 import com.example.LeetCode.Service.UserDataService;
 import com.example.LeetCode.Service.UserService;
