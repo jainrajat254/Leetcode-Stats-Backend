@@ -12,7 +12,7 @@ import java.util.List;
 public interface UserDataRepository extends JpaRepository<UserData, String> {
     UserData findByUsername(String username);
 
-    @Query("SELECT u.username FROM UserData u ORDER BY u.totalSolved DESC")
+    @Query("SELECT u.username FROM UserData u ORDER BY COALESCE(u.totalSolved, 0) DESC")
     List<String> clubLeaderBoard();
 
     @Query("SELECT u.username FROM UserData ud JOIN Users u ON u.username = ud.username WHERE u.selectedLanguage = :selectedLanguage ORDER BY ud.totalSolved DESC")

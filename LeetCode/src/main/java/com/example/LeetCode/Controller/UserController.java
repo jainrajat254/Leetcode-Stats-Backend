@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class UserController {
@@ -36,12 +37,12 @@ public class UserController {
     }
 
     @GetMapping("/clubLeaderBoard")
-    public List<String> clubLeaderBoard() {
+    public CompletableFuture<List<String>> clubLeaderBoard() {
         return userDataService.clubLeaderBoard();
     }
 
     @GetMapping("/languageLeaderBoard/{selectedLanguage}")
-    public List<String> languageLeaderBoard(@PathVariable String selectedLanguage) {
+    public CompletableFuture<List<String>> languageLeaderBoard(@PathVariable String selectedLanguage) {
         return userDataService.languageLeaderBoard(selectedLanguage);
     }
 
@@ -62,6 +63,11 @@ public class UserController {
             userDataService.fetchAndSaveUserData(username);
         }
         return ResponseEntity.ok("Data updated for all users");
+    }
+
+    @GetMapping("/data/updateUser/{username}")
+    public ResponseEntity<String> updateUser(@PathVariable String username) {
+        return userDataService.updateUser(username);
     }
 
     @GetMapping("/questionsSolved/{username}")

@@ -4,6 +4,9 @@ import com.example.LeetCode.Model.UserData;
 import com.example.LeetCode.Model.UserDataApiResponse;
 import com.example.LeetCode.Repository.UserDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -41,6 +44,7 @@ public class UserDataService {
     }
 
 
+    @Async
     private static UserData getUserData(String username, UserDataApiResponse apiResponse) {
         UserData newData = new UserData(
                 username,
@@ -64,13 +68,18 @@ public class UserDataService {
         return newData;
     }
 
-    public List<String> clubLeaderBoard() {
-        return userDataRepository.clubLeaderBoard();
+    @Cacheable(value = "clubLeaderBoard", cacheManager = "cacheManager")
+    @Async
+    public CompletableFuture<List<String>> clubLeaderBoard() {
+        return CompletableFuture.supplyAsync(() -> userDataRepository.clubLeaderBoard());
     }
 
-    public List<String> languageLeaderBoard(String selectedLanguage) {
-        return userDataRepository.languageLeaderBoard(selectedLanguage);
+    @Cacheable(value = "languageLeaderBoard", key = "#selectedLanguage", cacheManager = "cacheManager")
+    @Async
+    public CompletableFuture<List<String>> languageLeaderBoard(String selectedLanguage) {
+        return CompletableFuture.supplyAsync(() -> userDataRepository.languageLeaderBoard(selectedLanguage));
     }
+
 
     public Map<String, Boolean> hasAttemptedToday(String selectedLanguage) {
         List<Object[]> results = userDataRepository.hasAttemptedToday(selectedLanguage);
@@ -121,4 +130,25 @@ public class UserDataService {
         }
         return Collections.emptyList();
     }
+
+    public ResponseEntity<String> updateUser(String username) {
+        String apiUrl = "https://leetcode-stats-api.herokuapp.com/" + username;
+        UserDataApiResponse apiResponse = restTemplate.getForObject(apiUrl, UserDataApiResponse.class);
+
+        UserData existingData = userDataRepository.findByUsername(username);
+        UserData newData = getUserData(username, apiResponse);
+
+        if (existingData != null) {
+            if (!existingData.equals(newData)) {
+                userDataRepository.save(newData);
+                return ResponseEntity.ok("User data updated successfully");
+            } else {
+                return ResponseEntity.ok("No changes detected");
+            }
+        } else {
+            userDataRepository.save(newData);
+            return ResponseEntity.ok("New user data saved successfully");
+        }
+    }
+
 }
