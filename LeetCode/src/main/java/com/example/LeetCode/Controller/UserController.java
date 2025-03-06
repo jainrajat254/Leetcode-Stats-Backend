@@ -37,12 +37,12 @@ public class UserController {
     }
 
     @GetMapping("/clubLeaderBoard")
-    public CompletableFuture<List<String>> clubLeaderBoard() {
+    public Map<String, Integer> clubLeaderBoard() {
         return userDataService.clubLeaderBoard();
     }
 
     @GetMapping("/languageLeaderBoard/{selectedLanguage}")
-    public CompletableFuture<List<String>> languageLeaderBoard(@PathVariable String selectedLanguage) {
+    public Map<String, Integer> languageLeaderBoard(@PathVariable String selectedLanguage) {
         return userDataService.languageLeaderBoard(selectedLanguage);
     }
 

@@ -1,16 +1,16 @@
 package com.example.LeetCode.Service;
 
 import com.example.LeetCode.Model.UserData;
-import com.example.LeetCode.Model.UserDataApiResponse;
 import com.example.LeetCode.Repository.UserDataRepository;
+import okhttp3.*;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -21,65 +21,114 @@ public class UserDataService {
     @Autowired
     private UserDataRepository userDataRepository;
 
-    @Autowired
-    private RestTemplate restTemplate;
-
+    private final OkHttpClient client = new OkHttpClient();
+    private static final MediaType JSON = MediaType.parse("application/json");
 
     @Async
     public CompletableFuture<Void> fetchAndSaveUserData(String username) {
-        String apiUrl = "https://leetcode-stats-api.herokuapp.com/" + username;
-        UserDataApiResponse apiResponse = restTemplate.getForObject(apiUrl, UserDataApiResponse.class);
-        UserData newData = getUserData(username, apiResponse);
-
-        UserData existingData = userDataRepository.findByUsername(username);
-        if (existingData != null) {
-            if (!existingData.equals(newData)) {
-                userDataRepository.save(newData);
-            }
-        } else {
-            userDataRepository.save(newData);
+        UserData newData = fetchUserDataFromLeetCode(username);
+        if (newData != null) {
+            saveOrUpdateUserData(newData);
         }
-
         return CompletableFuture.completedFuture(null);
     }
 
+    public ResponseEntity<String> updateUser(String username) {
+        UserData newData = fetchUserDataFromLeetCode(username);
+        if (newData != null) {
+            boolean isUpdated = saveOrUpdateUserData(newData);
+            return isUpdated ? ResponseEntity.ok("User data updated successfully")
+                    : ResponseEntity.ok("No changes detected");
+        }
+        return ResponseEntity.badRequest().body("Failed to fetch user data");
+    }
 
-    @Async
-    private static UserData getUserData(String username, UserDataApiResponse apiResponse) {
-        UserData newData = new UserData(
-                username,
-                apiResponse.getTotalSolved(),
-                apiResponse.getEasySolved(),
-                apiResponse.getMediumSolved(),
-                apiResponse.getHardSolved(),
-                apiResponse.getAcceptanceRate(),
-                apiResponse.getRanking(),
-                apiResponse.getSubmissionCalendar()
+    private UserData fetchUserDataFromLeetCode(String username) {
+        String query = String.format(
+                "{ \"query\": \"query getUserStats($username: String!) { matchedUser(username: $username) { profile { ranking } submissionCalendar submitStats { acSubmissionNum { difficulty count submissions } totalSubmissionNum { difficulty count submissions } } } }\", \"variables\": {\"username\": \"%s\"} }",
+                username
         );
+        RequestBody body = RequestBody.create(JSON, query);
+        Request request = new Request.Builder()
+                .url("https://leetcode.com/graphql/")
+                .post(body)
+                .addHeader("referer", "https://leetcode.com/" + username + "/")
+                .addHeader("Content-Type", "application/json")
+                .build();
 
-        newData.setUsername(username);
-        newData.setTotalSolved(apiResponse.getTotalSolved());
-        newData.setEasySolved(apiResponse.getEasySolved());
-        newData.setMediumSolved(apiResponse.getMediumSolved());
-        newData.setHardSolved(apiResponse.getHardSolved());
-        newData.setAcceptanceRate(apiResponse.getAcceptanceRate());
-        newData.setRanking(apiResponse.getRanking());
-        newData.setSubmissionCalendar(apiResponse.getSubmissionCalendar());
-        return newData;
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String responseString = response.body().string();
+                JSONObject jsonResponse = new JSONObject(responseString);
+                return parseUserData(username, jsonResponse);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    @Cacheable(value = "clubLeaderBoard", cacheManager = "cacheManager")
-    @Async
-    public CompletableFuture<List<String>> clubLeaderBoard() {
-        return CompletableFuture.supplyAsync(() -> userDataRepository.clubLeaderBoard());
+    private boolean saveOrUpdateUserData(UserData newData) {
+        UserData existingData = userDataRepository.findByUsername(newData.getUsername());
+        if (existingData != null && existingData.equals(newData)) {
+            return false;
+        }
+        userDataRepository.save(newData);
+        return true;
     }
 
-    @Cacheable(value = "languageLeaderBoard", key = "#selectedLanguage", cacheManager = "cacheManager")
-    @Async
-    public CompletableFuture<List<String>> languageLeaderBoard(String selectedLanguage) {
-        return CompletableFuture.supplyAsync(() -> userDataRepository.languageLeaderBoard(selectedLanguage));
+    private UserData parseUserData(String username, JSONObject json) {
+        JSONObject data = json.getJSONObject("data").getJSONObject("matchedUser");
+        JSONObject profile = data.getJSONObject("profile");
+        JSONObject submitStats = data.getJSONObject("submitStats");
+
+        int ranking = profile.getInt("ranking");
+        JSONObject submissionCalendarJson = new JSONObject(data.getString("submissionCalendar"));
+        Map<Long, Integer> submissionCalendar = new HashMap<>();
+
+        for (String key : submissionCalendarJson.keySet()) {
+            try {
+                long timestamp = Long.parseLong(key);
+                int count = submissionCalendarJson.getInt(key);
+                submissionCalendar.put(timestamp, count);
+            } catch (NumberFormatException e) {
+                e.printStackTrace(); // Handle any invalid key format
+            }
+        }
+
+        int totalSolved = submitStats.getJSONArray("acSubmissionNum").getJSONObject(0).getInt("count");
+        int easySolved = submitStats.getJSONArray("acSubmissionNum").getJSONObject(1).getInt("count");
+        int mediumSolved = submitStats.getJSONArray("acSubmissionNum").getJSONObject(2).getInt("count");
+        int hardSolved = submitStats.getJSONArray("acSubmissionNum").getJSONObject(3).getInt("count");
+        float acceptanceRate = (float) submitStats.getJSONArray("acSubmissionNum").getJSONObject(0).getInt("submissions") /
+                submitStats.getJSONArray("totalSubmissionNum").getJSONObject(0).getInt("submissions") * 100;
+
+        return new UserData(username, totalSolved, easySolved, mediumSolved, hardSolved, acceptanceRate, ranking, submissionCalendar);
     }
 
+    @Cacheable(value = "clubLeaderBoard", key = "'all_users'", cacheManager = "redisCacheManager")
+    public Map<String, Integer> clubLeaderBoard() {
+        List<Object[]> results = userDataRepository.clubLeaderBoard();
+        return results.stream()
+                .collect(Collectors.toMap(
+                        result -> (String) result[0],
+                        result -> (Integer) result[1],
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+    }
+
+    @Cacheable(value = "languageLeaderBoard", key = "#selectedLanguage", cacheManager = "redisCacheManager")
+    public Map<String, Integer> languageLeaderBoard(String selectedLanguage) {
+        List<Object[]> results = userDataRepository.languageLeaderBoard(selectedLanguage);
+        return results.stream()
+                .collect(Collectors.toMap(
+                        result -> (String) result[0],
+                        result -> (Integer) result[1],
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+    }
 
     public Map<String, Boolean> hasAttemptedToday(String selectedLanguage) {
         List<Object[]> results = userDataRepository.hasAttemptedToday(selectedLanguage);
@@ -130,25 +179,4 @@ public class UserDataService {
         }
         return Collections.emptyList();
     }
-
-    public ResponseEntity<String> updateUser(String username) {
-        String apiUrl = "https://leetcode-stats-api.herokuapp.com/" + username;
-        UserDataApiResponse apiResponse = restTemplate.getForObject(apiUrl, UserDataApiResponse.class);
-
-        UserData existingData = userDataRepository.findByUsername(username);
-        UserData newData = getUserData(username, apiResponse);
-
-        if (existingData != null) {
-            if (!existingData.equals(newData)) {
-                userDataRepository.save(newData);
-                return ResponseEntity.ok("User data updated successfully");
-            } else {
-                return ResponseEntity.ok("No changes detected");
-            }
-        } else {
-            userDataRepository.save(newData);
-            return ResponseEntity.ok("New user data saved successfully");
-        }
-    }
-
 }

@@ -9,6 +9,7 @@ import java.util.*;
 
 @Entity
 @Table(name = "user_data")
+
 public class UserData {
 
     @Id

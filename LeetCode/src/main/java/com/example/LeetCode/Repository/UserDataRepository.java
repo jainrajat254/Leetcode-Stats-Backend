@@ -12,11 +12,11 @@ import java.util.List;
 public interface UserDataRepository extends JpaRepository<UserData, String> {
     UserData findByUsername(String username);
 
-    @Query("SELECT u.username FROM UserData u ORDER BY COALESCE(u.totalSolved, 0) DESC")
-    List<String> clubLeaderBoard();
+    @Query("SELECT ud.username, ud.totalSolved FROM UserData ud JOIN Users u ON u.username = ud.username ORDER BY ud.totalSolved DESC")
+    List<Object[]> clubLeaderBoard();
 
-    @Query("SELECT u.username FROM UserData ud JOIN Users u ON u.username = ud.username WHERE u.selectedLanguage = :selectedLanguage ORDER BY ud.totalSolved DESC")
-    List<String> languageLeaderBoard(@Param("selectedLanguage") String selectedLanguage);
+    @Query("SELECT ud.username, ud.totalSolved FROM UserData ud JOIN Users u ON u.username = ud.username WHERE u.selectedLanguage = :selectedLanguage ORDER BY ud.totalSolved DESC")
+    List<Object[]> languageLeaderBoard(@Param("selectedLanguage") String selectedLanguage);
 
     @Query("SELECT ud.username, ud.submittedToday FROM UserData ud JOIN Users u ON u.username = ud.username WHERE u.selectedLanguage = :selectedLanguage ORDER BY ud.submittedToday")
     List<Object[]> hasAttemptedToday(@Param("selectedLanguage") String selectedLanguage);
