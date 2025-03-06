@@ -9,7 +9,6 @@ import java.util.*;
 
 @Entity
 @Table(name = "user_data")
-
 public class UserData {
 
     @Id
@@ -22,6 +21,11 @@ public class UserData {
     private int hardSolved;
     private double acceptanceRate;
     private int ranking;
+    private String githubUrl;
+    private String twitterUrl;
+    private String linkedinUrl;
+    private String userAvatar;
+    private String school;
 
     @Column(name = "submission_calendar")
     private List<Boolean> submissionCalendar = new ArrayList<>(7);  // Using List instead of array
@@ -33,9 +37,8 @@ public class UserData {
     public UserData() {
     }
 
-    public UserData(String username, int totalSolved, int easySolved,
-                    int mediumSolved, int hardSolved, double acceptanceRate, int ranking,
-                    Map<Long, Integer> submissionCalendar) {
+    public UserData(String username, int totalSolved, int easySolved, int mediumSolved, int hardSolved, double acceptanceRate, int ranking, Map<Long, Integer> submissionCalendar, String githubUrl, String twitterUrl, String linkedinUrl, String userAvatar, String school) {
+
         this.username = username;
         this.totalSolved = totalSolved;
         this.easySolved = easySolved;
@@ -44,6 +47,11 @@ public class UserData {
         this.acceptanceRate = acceptanceRate;
         this.ranking = ranking;
         this.setSubmissionCalendar(submissionCalendar);
+        this.githubUrl = githubUrl;
+        this.twitterUrl = twitterUrl;
+        this.linkedinUrl = linkedinUrl;
+        this.userAvatar = userAvatar;
+        this.school = school;
     }
 
     public String getUsername() {
@@ -133,5 +141,45 @@ public class UserData {
 
     public void setSubmittedToday(Boolean submittedToday) {
         this.submittedToday = submittedToday;
+    }
+
+    public String getGithubUrl() {
+        return githubUrl;
+    }
+
+    public void setGithubUrl(String githubUrl) {
+        this.githubUrl = githubUrl;
+    }
+
+    public String getTwitterUrl() {
+        return twitterUrl;
+    }
+
+    public void setTwitterUrl(String twitterUrl) {
+        this.twitterUrl = twitterUrl;
+    }
+
+    public String getLinkedinUrl() {
+        return linkedinUrl;
+    }
+
+    public void setLinkedinUrl(String linkedinUrl) {
+        this.linkedinUrl = linkedinUrl;
+    }
+
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
+    }
+
+    public String getSchool() {
+        return school;
+    }
+
+    public void setSchool(String school) {
+        this.school = school;
     }
 }

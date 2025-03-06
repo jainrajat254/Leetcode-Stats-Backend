@@ -43,11 +43,31 @@ public class UserDataService {
         return ResponseEntity.badRequest().body("Failed to fetch user data");
     }
 
+    private boolean saveOrUpdateUserData(UserData newData) {
+        UserData existingData = userDataRepository.findByUsername(newData.getUsername());
+        if (existingData != null && existingData.equals(newData)) {
+            return false;
+        }
+        userDataRepository.save(newData);
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
     private UserData fetchUserDataFromLeetCode(String username) {
         String query = String.format(
-                "{ \"query\": \"query getUserStats($username: String!) { matchedUser(username: $username) { profile { ranking } submissionCalendar submitStats { acSubmissionNum { difficulty count submissions } totalSubmissionNum { difficulty count submissions } } } }\", \"variables\": {\"username\": \"%s\"} }",
+                "{ \"query\": \"query getUserStats($username: String!) { matchedUser(username: $username) { githubUrl twitterUrl linkedinUrl profile { ranking userAvatar school } submissionCalendar submitStats { acSubmissionNum { difficulty count submissions } totalSubmissionNum { difficulty count submissions } } } }\", \"variables\": {\"username\": \"%s\"} }",
                 username
         );
+
         RequestBody body = RequestBody.create(JSON, query);
         Request request = new Request.Builder()
                 .url("https://leetcode.com/graphql/")
@@ -68,21 +88,18 @@ public class UserDataService {
         return null;
     }
 
-    private boolean saveOrUpdateUserData(UserData newData) {
-        UserData existingData = userDataRepository.findByUsername(newData.getUsername());
-        if (existingData != null && existingData.equals(newData)) {
-            return false;
-        }
-        userDataRepository.save(newData);
-        return true;
-    }
-
     private UserData parseUserData(String username, JSONObject json) {
         JSONObject data = json.getJSONObject("data").getJSONObject("matchedUser");
         JSONObject profile = data.getJSONObject("profile");
         JSONObject submitStats = data.getJSONObject("submitStats");
 
         int ranking = profile.getInt("ranking");
+        String githubUrl = data.optString("githubUrl", null);
+        String twitterUrl = data.optString("twitterUrl", null);
+        String linkedinUrl = data.optString("linkedinUrl", null);
+        String userAvatar = profile.optString("userAvatar", null);
+        String school = profile.optString("school", null);
+
         JSONObject submissionCalendarJson = new JSONObject(data.getString("submissionCalendar"));
         Map<Long, Integer> submissionCalendar = new HashMap<>();
 
@@ -103,8 +120,9 @@ public class UserDataService {
         float acceptanceRate = (float) submitStats.getJSONArray("acSubmissionNum").getJSONObject(0).getInt("submissions") /
                 submitStats.getJSONArray("totalSubmissionNum").getJSONObject(0).getInt("submissions") * 100;
 
-        return new UserData(username, totalSolved, easySolved, mediumSolved, hardSolved, acceptanceRate, ranking, submissionCalendar);
+        return new UserData(username, totalSolved, easySolved, mediumSolved, hardSolved, acceptanceRate, ranking, submissionCalendar, githubUrl, twitterUrl, linkedinUrl, userAvatar, school);
     }
+
 
     @Cacheable(value = "clubLeaderBoard", key = "'all_users'", cacheManager = "redisCacheManager")
     public Map<String, Integer> clubLeaderBoard() {
@@ -117,6 +135,15 @@ public class UserDataService {
                         LinkedHashMap::new
                 ));
     }
+
+
+
+
+
+
+
+
+
 
     @Cacheable(value = "languageLeaderBoard", key = "#selectedLanguage", cacheManager = "redisCacheManager")
     public Map<String, Integer> languageLeaderBoard(String selectedLanguage) {
