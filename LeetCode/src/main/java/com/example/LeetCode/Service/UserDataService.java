@@ -1,6 +1,8 @@
 package com.example.LeetCode.Service;
 
+import com.example.LeetCode.Model.LeaderboardEntry;
 import com.example.LeetCode.Model.UserData;
+import com.example.LeetCode.Model.UserProfileDTO;
 import com.example.LeetCode.Repository.UserDataRepository;
 import okhttp3.*;
 import org.json.JSONObject;
@@ -51,16 +53,6 @@ public class UserDataService {
         userDataRepository.save(newData);
         return true;
     }
-
-
-
-
-
-
-
-
-
-
 
     private UserData fetchUserDataFromLeetCode(String username) {
         String query = String.format(
@@ -123,39 +115,16 @@ public class UserDataService {
         return new UserData(username, totalSolved, easySolved, mediumSolved, hardSolved, acceptanceRate, ranking, submissionCalendar, githubUrl, twitterUrl, linkedinUrl, userAvatar, school);
     }
 
-
     @Cacheable(value = "clubLeaderBoard", key = "'all_users'", cacheManager = "redisCacheManager")
-    public Map<String, Integer> clubLeaderBoard() {
-        List<Object[]> results = userDataRepository.clubLeaderBoard();
-        return results.stream()
-                .collect(Collectors.toMap(
-                        result -> (String) result[0],
-                        result -> (Integer) result[1],
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
+    public List<LeaderboardEntry> getClubLeaderBoard() {
+        return userDataRepository.clubLeaderBoard();
     }
-
-
-
-
-
-
-
-
-
 
     @Cacheable(value = "languageLeaderBoard", key = "#selectedLanguage", cacheManager = "redisCacheManager")
-    public Map<String, Integer> languageLeaderBoard(String selectedLanguage) {
-        List<Object[]> results = userDataRepository.languageLeaderBoard(selectedLanguage);
-        return results.stream()
-                .collect(Collectors.toMap(
-                        result -> (String) result[0],
-                        result -> (Integer) result[1],
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
+    public List<LeaderboardEntry> getLanguageLeaderBoard(String selectedLanguage) {
+        return userDataRepository.languageLeaderBoard(selectedLanguage);
     }
+
 
     public Map<String, Boolean> hasAttemptedToday(String selectedLanguage) {
         List<Object[]> results = userDataRepository.hasAttemptedToday(selectedLanguage);
@@ -205,5 +174,13 @@ public class UserDataService {
                     .collect(Collectors.toList());
         }
         return Collections.emptyList();
+    }
+
+    public UserProfileDTO getUserSocials(String username) {
+        return userDataRepository.getUserSocials(username);
+    }
+
+    public UserProfileDTO getUserProfile(String username) {
+        return userDataRepository.getUserProfile(username);
     }
 }

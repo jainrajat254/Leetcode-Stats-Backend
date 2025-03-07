@@ -1,8 +1,6 @@
 package com.example.LeetCode.Controller;
 
-import com.example.LeetCode.Model.LoginCredentials;
-import com.example.LeetCode.Model.LoginResponse;
-import com.example.LeetCode.Model.Users;
+import com.example.LeetCode.Model.*;
 import com.example.LeetCode.Service.UserDataService;
 import com.example.LeetCode.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,13 +35,13 @@ public class UserController {
     }
 
     @GetMapping("/clubLeaderBoard")
-    public Map<String, Integer> clubLeaderBoard() {
-        return userDataService.clubLeaderBoard();
+    public List<LeaderboardEntry> clubLeaderBoard() {
+        return userDataService.getClubLeaderBoard();
     }
 
     @GetMapping("/languageLeaderBoard/{selectedLanguage}")
-    public Map<String, Integer> languageLeaderBoard(@PathVariable String selectedLanguage) {
-        return userDataService.languageLeaderBoard(selectedLanguage);
+    public List<LeaderboardEntry> languageLeaderBoard(@PathVariable String selectedLanguage) {
+        return userDataService.getLanguageLeaderBoard(selectedLanguage);
     }
 
     @GetMapping("/hasAttemptedToday/{selectedLanguage}")
@@ -83,5 +81,15 @@ public class UserController {
     @GetMapping("/questionsCount/{selectedLanguage}")
     public Map<String, Integer> questionsCount(@PathVariable String selectedLanguage) {
         return userDataService.questionsCount(selectedLanguage);
+    }
+
+    @GetMapping("/getUserSocials/{username}")
+    public UserProfileDTO getUserSocialsAndProfile(@PathVariable String username) {
+        return userDataService.getUserSocials(username);
+    }
+
+    @GetMapping("/getUserProfile/{username}")
+    public UserProfileDTO getUserProfile(@PathVariable String username) {
+        return userDataService.getUserProfile(username);
     }
 }

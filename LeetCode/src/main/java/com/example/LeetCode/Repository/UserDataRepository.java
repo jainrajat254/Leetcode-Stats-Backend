@@ -1,6 +1,8 @@
 package com.example.LeetCode.Repository;
 
+import com.example.LeetCode.Model.LeaderboardEntry;
 import com.example.LeetCode.Model.UserData;
+import com.example.LeetCode.Model.UserProfileDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,11 +14,17 @@ import java.util.List;
 public interface UserDataRepository extends JpaRepository<UserData, String> {
     UserData findByUsername(String username);
 
-    @Query("SELECT ud.username, ud.totalSolved FROM UserData ud JOIN Users u ON u.username = ud.username ORDER BY ud.totalSolved DESC")
-    List<Object[]> clubLeaderBoard();
+    @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(ud.username, ud.totalSolved, ud.userAvatar) " +
+            "FROM UserData ud " +
+            "ORDER BY ud.totalSolved DESC")
+    List<LeaderboardEntry> clubLeaderBoard();
 
-    @Query("SELECT ud.username, ud.totalSolved FROM UserData ud JOIN Users u ON u.username = ud.username WHERE u.selectedLanguage = :selectedLanguage ORDER BY ud.totalSolved DESC")
-    List<Object[]> languageLeaderBoard(@Param("selectedLanguage") String selectedLanguage);
+    @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(ud.username, ud.totalSolved, ud.userAvatar) " +
+            "FROM UserData ud " +
+            "JOIN Users u ON u.username = ud.username " +
+            "WHERE u.selectedLanguage = :selectedLanguage " +
+            "ORDER BY ud.totalSolved DESC")
+    List<LeaderboardEntry> languageLeaderBoard(@Param("selectedLanguage") String selectedLanguage);
 
     @Query("SELECT ud.username, ud.submittedToday FROM UserData ud JOIN Users u ON u.username = ud.username WHERE u.selectedLanguage = :selectedLanguage ORDER BY ud.submittedToday")
     List<Object[]> hasAttemptedToday(@Param("selectedLanguage") String selectedLanguage);
@@ -32,4 +40,11 @@ public interface UserDataRepository extends JpaRepository<UserData, String> {
 
     @Query("SELECT u.name, u.selectedLanguage FROM Users u WHERE u.username = :username")
     List<String> nameAndLanguage(@Param("username") String username);
+
+    @Query("SELECT new com.example.LeetCode.Model.UserProfileDTO(u.githubUrl, u.twitterUrl, u.linkedinUrl, u.school) FROM UserData u WHERE u.username = :username")
+    UserProfileDTO getUserSocials(@Param("username") String username);
+
+    @Query("SELECT new com.example.LeetCode.Model.UserProfileDTO(u.userAvatar) FROM UserData u WHERE u.username = :username")
+    UserProfileDTO getUserProfile(@Param("username") String username);
+
 }
