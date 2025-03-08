@@ -1,6 +1,7 @@
 package com.example.LeetCode.Repository;
 
 import com.example.LeetCode.Model.LeaderboardEntry;
+import com.example.LeetCode.Model.StatsEntry;
 import com.example.LeetCode.Model.UserData;
 import com.example.LeetCode.Model.UserProfileDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +19,13 @@ public interface UserDataRepository extends JpaRepository<UserData, String> {
             "FROM UserData ud " +
             "ORDER BY ud.totalSolved DESC")
     List<LeaderboardEntry> clubLeaderBoard();
+
+    @Query("SELECT new com.example.LeetCode.Model.StatsEntry(ud.username, ud.totalSolved, ud.submissionCalendar) " +
+            "FROM UserData ud " +
+            "JOIN Users u ON u.username = ud.username " +
+            "WHERE u.selectedLanguage = :selectedLanguage " +
+            "ORDER BY ud.totalSolved DESC")
+    List<StatsEntry> getStats(@Param("selectedLanguage") String selectedLanguage);
 
     @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(ud.username, ud.totalSolved, ud.userAvatar) " +
             "FROM UserData ud " +

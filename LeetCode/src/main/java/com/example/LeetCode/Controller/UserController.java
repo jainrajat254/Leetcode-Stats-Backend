@@ -79,7 +79,7 @@ public class UserController {
     }
 
     @GetMapping("/questionsCount/{selectedLanguage}")
-    public Map<String, Integer> questionsCount(@PathVariable String selectedLanguage) {
+    public List<StatsEntry> questionsCount(@PathVariable String selectedLanguage) {
         return userDataService.questionsCount(selectedLanguage);
     }
 

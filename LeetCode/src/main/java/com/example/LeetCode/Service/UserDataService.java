@@ -1,6 +1,7 @@
 package com.example.LeetCode.Service;
 
 import com.example.LeetCode.Model.LeaderboardEntry;
+import com.example.LeetCode.Model.StatsEntry;
 import com.example.LeetCode.Model.UserData;
 import com.example.LeetCode.Model.UserProfileDTO;
 import com.example.LeetCode.Repository.UserDataRepository;
@@ -125,6 +126,10 @@ public class UserDataService {
         return userDataRepository.languageLeaderBoard(selectedLanguage);
     }
 
+    public List<StatsEntry> questionsCount(String selectedLanguage) {
+        return userDataRepository.getStats(selectedLanguage);
+    }
+
 
     public Map<String, Boolean> hasAttemptedToday(String selectedLanguage) {
         List<Object[]> results = userDataRepository.hasAttemptedToday(selectedLanguage);
@@ -132,17 +137,6 @@ public class UserDataService {
                 .collect(Collectors.toMap(
                         result -> (String) result[0],
                         result -> (Boolean) result[1],
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
-    }
-
-    public Map<String, Integer> questionsCount(String selectedLanguage) {
-        List<Object[]> results = userDataRepository.questionsCount(selectedLanguage);
-        return results.stream()
-                .collect(Collectors.toMap(
-                        result -> (String) result[0],
-                        result -> (Integer) result[1],
                         (existing, replacement) -> existing,
                         LinkedHashMap::new
                 ));
