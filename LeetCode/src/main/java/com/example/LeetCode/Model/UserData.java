@@ -28,7 +28,7 @@ public class UserData {
     private String school;
 
     @Column(name = "submission_calendar")
-    private List<Boolean> submissionCalendar = new ArrayList<>(7);  // Using List instead of array
+    private List<Boolean> submissionCalendar = new ArrayList<>(30);  // Using List instead of array
 
     @Column(name = "submitted_today")
     private Boolean submittedToday;
@@ -116,7 +116,7 @@ public class UserData {
     }
 
     public void setSubmissionCalendar(Map<Long, Integer> submissionCalendarMap) {
-        List<Boolean> last7DaysSubmission = new ArrayList<>(7); // Using List instead of array
+        List<Boolean> last7DaysSubmission = new ArrayList<>(30); // Using List instead of array
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -124,7 +124,7 @@ public class UserData {
         calendar.set(Calendar.MILLISECOND, 0);
 
         long todayTimestamp = calendar.getTimeInMillis() / 1000;
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 30; i++) {
             long dayStartTimestamp = todayTimestamp - (i * 86400); // Subtract i days in seconds
 
             boolean isSubmitted = submissionCalendarMap.containsKey(dayStartTimestamp);

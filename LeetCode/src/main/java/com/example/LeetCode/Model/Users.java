@@ -25,6 +25,9 @@ public class Users {
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
 
+    @Column(name = "year", nullable = false, length = 20)
+    private String year;
+
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
@@ -54,6 +57,14 @@ public class Users {
 
     public String getSelectedLanguage() {
         return selectedLanguage;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 
     public void setSelectedLanguage(String selectedLanguage) {

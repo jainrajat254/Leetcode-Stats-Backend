@@ -1,15 +1,17 @@
 package com.example.LeetCode.Model;
 
-public class LeaderboardEntry {
+public class StreakContent {
     private String name;
     private String username;
-    private int totalSolved;
+    private Boolean submittedToday;
     private String userAvatar;
 
-    public LeaderboardEntry(String name, String username, int totalSolved, String userAvatar) {
+    public StreakContent() {}
+
+    public StreakContent(String name, String username, Boolean submittedToday, String userAvatar) {
         this.name = name;
         this.username = username;
-        this.totalSolved = totalSolved;
+        this.submittedToday = submittedToday;
         this.userAvatar = userAvatar;
     }
 
@@ -29,12 +31,12 @@ public class LeaderboardEntry {
         this.username = username;
     }
 
-    public int getTotalSolved() {
-        return totalSolved;
+    public Boolean getSubmittedToday() {
+        return submittedToday;
     }
 
-    public void setTotalSolved(int totalSolved) {
-        this.totalSolved = totalSolved;
+    public void setSubmittedToday(Boolean submittedToday) {
+        this.submittedToday = submittedToday;
     }
 
     public String getUserAvatar() {
@@ -45,4 +47,3 @@ public class LeaderboardEntry {
         this.userAvatar = userAvatar;
     }
 }
-

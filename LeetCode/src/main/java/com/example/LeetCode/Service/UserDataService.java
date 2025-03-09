@@ -1,9 +1,6 @@
 package com.example.LeetCode.Service;
 
-import com.example.LeetCode.Model.LeaderboardEntry;
-import com.example.LeetCode.Model.StatsEntry;
-import com.example.LeetCode.Model.UserData;
-import com.example.LeetCode.Model.UserProfileDTO;
+import com.example.LeetCode.Model.*;
 import com.example.LeetCode.Repository.UserDataRepository;
 import okhttp3.*;
 import org.json.JSONObject;
@@ -11,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -130,27 +129,24 @@ public class UserDataService {
         return userDataRepository.getStats(selectedLanguage);
     }
 
-
-    public Map<String, Boolean> hasAttemptedToday(String selectedLanguage) {
-        List<Object[]> results = userDataRepository.hasAttemptedToday(selectedLanguage);
-        return results.stream()
-                .collect(Collectors.toMap(
-                        result -> (String) result[0],
-                        result -> (Boolean) result[1],
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
+    public List<StreakContent> hasAttemptedToday(String selectedLanguage) {
+        return userDataRepository.hasAttemptedToday(selectedLanguage);
     }
 
-    public List<Boolean> lastSevenDays(String username) {
-        List<String> result = userDataRepository.lastSevenDays(username);
+    public List<Boolean> lastThirtyDays(String username) {
+        List<String> result = userDataRepository.lastThirtyDays(username);
         if (!result.isEmpty() && result.getFirst() != null) {
-            return Arrays.stream(result.getFirst().split(","))
+            List<Boolean> booleanList = Arrays.stream(result.getFirst().split(","))
                     .map(Boolean::parseBoolean)
                     .collect(Collectors.toList());
+
+            // Reverse the list
+            Collections.reverse(booleanList);
+            return booleanList;
         }
         return Collections.emptyList();
     }
+
 
     public List<String> questionsSolved(String username) {
         List<String> result = userDataRepository.questionsSolved(username);

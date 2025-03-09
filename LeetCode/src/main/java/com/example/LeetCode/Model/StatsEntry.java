@@ -3,14 +3,24 @@ package com.example.LeetCode.Model;
 import java.util.List;
 
 public class StatsEntry {
+    private String name;
     private String username;
     private int totalSolved;
     private List<Boolean> submissionCalendar;
 
-    public StatsEntry(String username, int totalSolved, List<Boolean> submissionCalendar) {
+    public StatsEntry(String name, String username, int totalSolved, List<Boolean> submissionCalendar) {
+        this.name = name;
         this.username = username;
         this.totalSolved = totalSolved;
         this.submissionCalendar = submissionCalendar;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getUsername() {

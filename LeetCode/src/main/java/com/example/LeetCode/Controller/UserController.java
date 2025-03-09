@@ -6,11 +6,12 @@ import com.example.LeetCode.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.UUID;
 
 @RestController
 public class UserController {
@@ -22,16 +23,25 @@ public class UserController {
     private UserDataService userDataService;
 
     @PostMapping("/register")
-    public Users register(@RequestBody Users user) {
-        return userService.register(user);
+    public ResponseEntity<?> register(@RequestBody Users user) {
+        try {
+            Users registeredUser = userService.register(user);
+            return ResponseEntity.ok(registeredUser);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginCredentials credentials) {
-        LoginResponse userResponse = userService.login(credentials);
-        System.out.println(userResponse);
-        return userResponse != null ? ResponseEntity.ok(userResponse)
-                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    public ResponseEntity<?> login(@RequestBody LoginCredentials credentials) {
+        try {
+            LoginResponse userResponse = userService.login(credentials);
+            return ResponseEntity.ok(userResponse);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
     }
 
     @GetMapping("/clubLeaderBoard")
@@ -45,13 +55,13 @@ public class UserController {
     }
 
     @GetMapping("/hasAttemptedToday/{selectedLanguage}")
-    public Map<String, Boolean> hasAttemptedToday(@PathVariable String selectedLanguage) {
+    public List<StreakContent> hasAttemptedToday(@PathVariable String selectedLanguage) {
         return userDataService.hasAttemptedToday(selectedLanguage);
     }
 
-    @GetMapping("/lastSevenDays/{username}")
+    @GetMapping("/lastThirtyDays/{username}")
     public List<Boolean> lastSevenDays(@PathVariable String username) {
-        return userDataService.lastSevenDays(username);
+        return userDataService.lastThirtyDays(username);
     }
 
     @GetMapping("/data/updateAll")
@@ -91,5 +101,20 @@ public class UserController {
     @GetMapping("/getUserProfile/{username}")
     public UserProfileDTO getUserProfile(@PathVariable String username) {
         return userDataService.getUserProfile(username);
+    }
+
+    @PutMapping("/editPassword/{id}")
+    public ResponseEntity<String> editPassword(@RequestBody EditPassword request, @PathVariable UUID id) {
+        try {
+            String response = userService.editPassword(request, id);
+            return ResponseEntity.ok(response);
+
+        } catch (UsernameNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Incorrect current password.");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + ex.getMessage());
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.LeetCode.Service;
 
+import com.example.LeetCode.Model.EditPassword;
 import com.example.LeetCode.Model.LoginCredentials;
 import com.example.LeetCode.Model.LoginResponse;
 import com.example.LeetCode.Model.Users;
@@ -9,12 +10,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -33,33 +35,45 @@ public class UserService {
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
-    public LoginResponse login(LoginCredentials credentials) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
-
-        if (authentication.isAuthenticated()) {
-            Optional<Users> user = Optional.ofNullable(userRepository.findByUsername(credentials.getUsername()));
-
-            if (user.isPresent()) {
-                Users userEntity = user.get();
-
-                String token = jwtService.generateToken(credentials.getUsername());
-
-                return new LoginResponse(userEntity.getName(), userEntity.getSelectedLanguage(), userEntity.getUsername(), token);
-            } else {
-                throw new BadCredentialsException("Invalid username or password");
-            }
-        } else {
-            throw new BadCredentialsException("Invalid username or password");
+    public Users register(Users user) {
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            throw new IllegalArgumentException("Username already exists");
         }
+        user.setPassword(encoder.encode(user.getPassword()));
+        return userRepository.save(user);
     }
 
-    public Users register(Users user) {
-        user.setPassword(encoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return user;
+    public LoginResponse login(LoginCredentials credentials) {
+        Users user = userRepository.findByUsername(credentials.getUsername());
+        if (user == null) {
+            throw new UsernameNotFoundException("Username does not exist");
+        }
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword())
+            );
+        } catch (Exception e) {
+            throw new BadCredentialsException("Incorrect password");
+        }
+        String token = jwtService.generateToken(credentials.getUsername());
+        return new LoginResponse(user.getId(), user.getName(), user.getSelectedLanguage(),user.getYear(), user.getUsername(), token);
     }
 
     public List<String> getAllUsernames() {
         return userRepository.findAllUsernames();
+    }
+
+    public String editPassword(EditPassword request, UUID id) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if (user == null ) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        if (!encoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Incorrect current password.");
+        }
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        return "Password updated successfully";
     }
 }
