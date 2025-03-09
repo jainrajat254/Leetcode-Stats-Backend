@@ -117,4 +117,9 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + ex.getMessage());
         }
     }
+
+    @PutMapping("/editDetails/{id}")
+    public Users editDetails(@RequestBody EditDetails request, @PathVariable UUID id) {
+        return userService.editDetails(request, id);
+    }
 }

@@ -25,8 +25,8 @@ public class Users {
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
 
-    @Column(name = "year", nullable = false, length = 20)
-    private String year;
+    @Column(name = "year", nullable = false, length = 50)
+    private String year = "First Year"; // Default value in case no value is provided.
 
     @Column(name = "password", nullable = false, length = 255)
     private String password;

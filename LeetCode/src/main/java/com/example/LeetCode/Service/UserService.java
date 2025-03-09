@@ -1,9 +1,6 @@
 package com.example.LeetCode.Service;
 
-import com.example.LeetCode.Model.EditPassword;
-import com.example.LeetCode.Model.LoginCredentials;
-import com.example.LeetCode.Model.LoginResponse;
-import com.example.LeetCode.Model.Users;
+import com.example.LeetCode.Model.*;
 import com.example.LeetCode.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -75,5 +72,14 @@ public class UserService {
         user.setPassword(encoder.encode(request.getNewPassword()));
         userRepository.save(user);
         return "Password updated successfully";
+    }
+
+    public Users editDetails(EditDetails request, UUID id) {
+        Users users = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
+        users.setName(request.getName());
+        users.setUsername(request.getUsername());
+        users.setYear(request.getYear());
+        users.setSelectedLanguage(users.getSelectedLanguage());
+        return userRepository.save(users);
     }
 }
