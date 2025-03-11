@@ -7,12 +7,14 @@ public class StatsEntry {
     private String username;
     private int totalSolved;
     private List<Boolean> submissionCalendar;
+    private String year;
 
-    public StatsEntry(String name, String username, int totalSolved, List<Boolean> submissionCalendar) {
+    public StatsEntry(String name, String username, int totalSolved, List<Boolean> submissionCalendar, String year) {
         this.name = name;
         this.username = username;
         this.totalSolved = totalSolved;
         this.submissionCalendar = submissionCalendar;
+        this.year = year;
     }
 
     public String getName() {
@@ -45,5 +47,13 @@ public class StatsEntry {
 
     public void setSubmissionCalendar(List<Boolean> submissionCalendar) {
         this.submissionCalendar = submissionCalendar;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 }

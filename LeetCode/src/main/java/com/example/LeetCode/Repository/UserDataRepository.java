@@ -12,20 +12,20 @@ import java.util.List;
 public interface UserDataRepository extends JpaRepository<UserData, String> {
     UserData findByUsername(String username);
 
-    @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(u.name, ud.username, ud.totalSolved, ud.userAvatar) " +
+    @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(u.name, ud.username, ud.totalSolved, ud.userAvatar, u.year) " +
             "FROM UserData ud " +
             "JOIN Users u ON u.username = ud.username " +
             "ORDER BY ud.totalSolved DESC")
     List<LeaderboardEntry> clubLeaderBoard();
 
-    @Query("SELECT new com.example.LeetCode.Model.StatsEntry(u.name, ud.username, ud.totalSolved, ud.submissionCalendar) " +
+    @Query("SELECT new com.example.LeetCode.Model.StatsEntry(u.name, ud.username, ud.totalSolved, ud.submissionCalendar, u.year) " +
             "FROM UserData ud " +
             "JOIN Users u ON u.username = ud.username " +
             "WHERE u.selectedLanguage = :selectedLanguage " +
             "ORDER BY ud.totalSolved DESC")
     List<StatsEntry> getStats(@Param("selectedLanguage") String selectedLanguage);
 
-    @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(u.name, ud.username, ud.totalSolved, ud.userAvatar) " +
+    @Query("SELECT new com.example.LeetCode.Model.LeaderboardEntry(u.name, ud.username, ud.totalSolved, ud.userAvatar, u.year) " +
             "FROM UserData ud " +
             "JOIN Users u ON u.username = ud.username " +
             "WHERE u.selectedLanguage = :selectedLanguage " +

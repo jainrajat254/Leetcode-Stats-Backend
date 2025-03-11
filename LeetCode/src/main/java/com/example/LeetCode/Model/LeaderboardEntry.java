@@ -5,12 +5,14 @@ public class LeaderboardEntry {
     private String username;
     private int totalSolved;
     private String userAvatar;
+    private String year;
 
-    public LeaderboardEntry(String name, String username, int totalSolved, String userAvatar) {
+    public LeaderboardEntry(String name, String username, int totalSolved, String userAvatar, String year) {
         this.name = name;
         this.username = username;
         this.totalSolved = totalSolved;
         this.userAvatar = userAvatar;
+        this.year = year;
     }
 
     public String getName() {
@@ -43,6 +45,14 @@ public class LeaderboardEntry {
 
     public void setUserAvatar(String userAvatar) {
         this.userAvatar = userAvatar;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 }
 

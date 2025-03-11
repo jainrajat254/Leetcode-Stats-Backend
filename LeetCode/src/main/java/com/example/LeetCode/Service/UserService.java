@@ -79,7 +79,7 @@ public class UserService {
         users.setName(request.getName());
         users.setUsername(request.getUsername());
         users.setYear(request.getYear());
-        users.setSelectedLanguage(users.getSelectedLanguage());
+        users.setSelectedLanguage(request.getSelectedLanguage());
         return userRepository.save(users);
     }
 }
