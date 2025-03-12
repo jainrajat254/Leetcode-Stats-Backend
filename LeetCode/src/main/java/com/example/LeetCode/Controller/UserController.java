@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -41,6 +42,17 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/isValidUser/{username}")
+    public ResponseEntity<Map<String, String>> isValidUser(@PathVariable String username) {
+        String result = userService.isValidUser(username);
+
+        if ("User Found".equals(result)) {
+            return ResponseEntity.ok(Map.of("message", result));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", result));
         }
     }
 
@@ -121,5 +133,10 @@ public class UserController {
     @PutMapping("/editDetails/{id}")
     public Users editDetails(@RequestBody EditDetails request, @PathVariable UUID id) {
         return userService.editDetails(request, id);
+    }
+
+    @GetMapping("/getContestInfo/{username}")
+    public Contest getContestInfo(@PathVariable String username) {
+        return userDataService.getContestInfo(username);
     }
 }

@@ -55,4 +55,6 @@ public interface UserDataRepository extends JpaRepository<UserData, String> {
     @Query("SELECT new com.example.LeetCode.Model.UserProfileDTO(u.userAvatar) FROM UserData u WHERE u.username = :username")
     UserProfileDTO getUserProfile(@Param("username") String username);
 
+    @Query("SELECT new com.example.LeetCode.Model.Contest(u.attendedContestsCount, u.rating, u.globalRanking, u.topPercentage) FROM UserData u WHERE u.username = :username")
+    Contest getContestInfo(@Param("username") String username);
 }

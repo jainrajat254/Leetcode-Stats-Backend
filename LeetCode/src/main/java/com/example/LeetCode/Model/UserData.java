@@ -28,17 +28,29 @@ public class UserData {
     private String school;
 
     @Column(name = "submission_calendar")
-    private List<Boolean> submissionCalendar = new ArrayList<>(30);  // Using List instead of array
+    private List<Boolean> submissionCalendar = new ArrayList<>(30);
 
     @Column(name = "submitted_today")
     private Boolean submittedToday;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int attendedContestsCount;
+
+    @Column(nullable = false, columnDefinition = "double precision default 0.0")
+    private double rating;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int globalRanking;
+
+    @Column(nullable = false, columnDefinition = "double precision default 0.0")
+    private double topPercentage;
+
 
     // No-argument constructor
     public UserData() {
     }
 
-    public UserData(String username, int totalSolved, int easySolved, int mediumSolved, int hardSolved, double acceptanceRate, int ranking, Map<Long, Integer> submissionCalendar, String githubUrl, String twitterUrl, String linkedinUrl, String userAvatar, String school) {
-
+    public UserData(String username, int totalSolved, int easySolved, int mediumSolved, int hardSolved, double acceptanceRate, int ranking, Map<Long, Integer> submissionCalendar, String githubUrl, String twitterUrl, String linkedinUrl, String userAvatar, String school, int attendedContestsCount, double rating, int globalRanking, double topPercentage) {
         this.username = username;
         this.totalSolved = totalSolved;
         this.easySolved = easySolved;
@@ -52,6 +64,10 @@ public class UserData {
         this.linkedinUrl = linkedinUrl;
         this.userAvatar = userAvatar;
         this.school = school;
+        this.attendedContestsCount = attendedContestsCount;
+        this.rating = rating;
+        this.globalRanking = globalRanking;
+        this.topPercentage = topPercentage;
     }
 
     public String getUsername() {
@@ -77,7 +93,6 @@ public class UserData {
     public void setEasySolved(int easySolved) {
         this.easySolved = easySolved;
     }
-
 
     public int getMediumSolved() {
         return mediumSolved;
@@ -116,7 +131,7 @@ public class UserData {
     }
 
     public void setSubmissionCalendar(Map<Long, Integer> submissionCalendarMap) {
-        List<Boolean> last7DaysSubmission = new ArrayList<>(30); // Using List instead of array
+        List<Boolean> last30DaysSubmission = new ArrayList<>(30);
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -125,14 +140,13 @@ public class UserData {
 
         long todayTimestamp = calendar.getTimeInMillis() / 1000;
         for (int i = 0; i < 30; i++) {
-            long dayStartTimestamp = todayTimestamp - (i * 86400); // Subtract i days in seconds
-
+            long dayStartTimestamp = todayTimestamp - (i * 86400);
             boolean isSubmitted = submissionCalendarMap.containsKey(dayStartTimestamp);
-            last7DaysSubmission.add(isSubmitted);
+            last30DaysSubmission.add(isSubmitted);
         }
 
-        submittedToday = last7DaysSubmission.getFirst();
-        this.submissionCalendar = last7DaysSubmission;
+        submittedToday = last30DaysSubmission.get(0);
+        this.submissionCalendar = last30DaysSubmission;
     }
 
     public Boolean getSubmittedToday() {
@@ -181,5 +195,37 @@ public class UserData {
 
     public void setSchool(String school) {
         this.school = school;
+    }
+
+    public int getAttendedContestsCount() {
+        return attendedContestsCount;
+    }
+
+    public void setAttendedContestsCount(int attendedContestsCount) {
+        this.attendedContestsCount = attendedContestsCount;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public int getGlobalRanking() {
+        return globalRanking;
+    }
+
+    public void setGlobalRanking(int globalRanking) {
+        this.globalRanking = globalRanking;
+    }
+
+    public double getTopPercentage() {
+        return topPercentage;
+    }
+
+    public void setTopPercentage(double topPercentage) {
+        this.topPercentage = topPercentage;
     }
 }

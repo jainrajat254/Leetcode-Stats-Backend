@@ -3,6 +3,7 @@ package com.example.LeetCode.Service;
 import com.example.LeetCode.Model.*;
 import com.example.LeetCode.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,8 +37,42 @@ public class UserService {
         if (userRepository.findByUsername(user.getUsername()) != null) {
             throw new IllegalArgumentException("Username already exists");
         }
+        if (!doesLeetCodeUserExist(user.getUsername())) {
+            throw new IllegalArgumentException("LeetCode username not found");
+        }
         user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
+    }
+
+    private boolean doesLeetCodeUserExist(String username) {
+        String url = "https://leetcode.com/graphql";
+        String query = "{\"query\":\"{ matchedUser(username: \\\"" + username + "\\\") { username }}\"}";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(query, headers);
+        RestTemplate restTemplate = new RestTemplate();
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+            return response.getStatusCode() == HttpStatus.OK &&
+                    response.getBody() != null &&
+                    response.getBody().contains("\"matchedUser\":{\"username\":\"" + username + "\"}");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String isValidUser(String username) {
+        if (userRepository.findByUsername(username) == null) {
+            return "Username not found";
+        }
+        if (!doesLeetCodeUserExist(username)) {
+            return "Leetcode username not found";
+        }
+        return "User Found";
     }
 
     public LoginResponse login(LoginCredentials credentials) {
@@ -53,7 +88,7 @@ public class UserService {
             throw new BadCredentialsException("Incorrect password");
         }
         String token = jwtService.generateToken(credentials.getUsername());
-        return new LoginResponse(user.getId(), user.getName(), user.getSelectedLanguage(),user.getYear(), user.getUsername(), token);
+        return new LoginResponse(user.getId(), user.getName(), user.getSelectedLanguage(), user.getYear(), user.getUsername(), token);
     }
 
     public List<String> getAllUsernames() {
@@ -63,7 +98,7 @@ public class UserService {
     public String editPassword(EditPassword request, UUID id) {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        if (user == null ) {
+        if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
         if (!encoder.matches(request.getCurrentPassword(), user.getPassword())) {
